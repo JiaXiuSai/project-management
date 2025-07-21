@@ -191,6 +191,48 @@ src/
 - **Prettier**: Consistent code formatting
 - **Component Composition**: Reusable, composable components
 
+## Challenges
+
+### State Synchronization
+
+- Maintaining consistent state between frontend and backend—especially when using optimistic UI updates—introduces complexity and requires careful data flow design.
+
+### Testing Coverage
+
+- Writing comprehensive unit, integration, and end-to-end (E2E) tests can be time-intensive but is essential for long-term reliability and confidence in refactoring.
+
+### Accessibility
+
+- ARIA attributes and keyboard support were included, but true accessibility requires further work, including screen reader support and usability testing with real users.
+
+## Improvements
+
+### Authentication & Authorization
+
+- Add user accounts, roles, and access control
+- Implement secure token-based authentication using JWT or OAuth 2.0
+
+### Automated Testing
+
+- Add test coverage across layers:
+  - Jest, React Testing Library and Cypress
+- Integrate CI/CD pipelines to automate testing and deployment
+
+### Expanded Field Support
+
+- Introduce additional form fields and data models to handle more realistic use cases, such as:
+  - Assigned users
+  - Project timeline (start/due dates, milestones)
+  - Color tagging and categorization
+  - Priority levels (e.g., Low, Medium, High)
+  - Attachments and external links
+  - Comments and collaboration threads
+  - Audit trail / status history tracking
+
+### Documentation & Onboarding
+
+- Generate and host API documentation using Swagger
+
 ### Available Scripts
 
 #### Frontend
