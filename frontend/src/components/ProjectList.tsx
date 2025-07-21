@@ -126,7 +126,6 @@ const ProjectList = () => {
       if (err instanceof Error && err.name === 'AbortError') {
         return
       }
-      // Error is handled by useProjectApi hook
     } finally {
       setLoading(false)
     }
@@ -139,7 +138,6 @@ const ProjectList = () => {
       isInitialLoadRef.current = false
     }
     initialLoad()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -152,7 +150,7 @@ const ProjectList = () => {
     try {
       setEditModal({ open: true, project: { ...project } })
     } catch {
-      // Error handled by useProjectApi hook
+      showToast('error', 'Error setting edit modal')
     }
   }, [])
 
@@ -170,7 +168,7 @@ const ProjectList = () => {
 
         setEditModal({ open: false, project: null })
       } catch {
-        // Error handled by useProjectApi hook
+        showToast('error', 'Error updating project')
       } finally {
         setUpdatingProject(false)
       }
@@ -192,7 +190,7 @@ const ProjectList = () => {
           prev.map((proj) => (proj.id === updatedProject.id ? updatedProject : proj))
         )
       } catch {
-        // Error handled by useProjectApi hook
+        showToast('error', 'Error updating project status')
       } finally {
         setUpdatingStatus(null)
       }
@@ -208,7 +206,7 @@ const ProjectList = () => {
         setModalOpen(false)
         await loadProjects()
       } catch {
-        // Error handled by useProjectApi hook
+        showToast('error', 'Error creating project')
       } finally {
         setCreatingProject(false)
       }
@@ -230,7 +228,7 @@ const ProjectList = () => {
 
       await loadProjects()
     } catch {
-      // Error handled by useProjectApi hook
+      showToast('error', 'Error deleting project')
     } finally {
       setDeletingProject(false)
     }

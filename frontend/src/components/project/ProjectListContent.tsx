@@ -60,7 +60,6 @@ const ProjectListContent = React.memo(
               ))}
             </div>
 
-            {/* Pagination - Always visible when there are multiple pages */}
             {totalPages > 1 && (
               <div className="mt-auto pt-6">
                 <Pagination
