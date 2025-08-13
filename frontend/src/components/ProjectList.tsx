@@ -1,8 +1,22 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 
 import { DEFAULT_STATUSES, PAGE_SIZE } from '../constants'
 import { useKeyboardShortcuts, useProjectApi, useSearch, useToast } from '../hooks'
 import type { Project, ProjectListItem } from '../services/api'
+import {
+  useActionState,
+  useActionStateActions,
+  useLoadingActions,
+  useLoadingState,
+  useModalActions,
+  useModalState,
+  usePagination,
+  useProjectActions,
+  useProjects,
+  useSearchActions,
+  useSearchState,
+  useStatuses,
+} from '../store'
 import type { ProjectFormData } from '../utils/validation'
 import { ProjectModals } from './modals'
 import { ProjectListContent, ProjectListErrorBoundary, ProjectListHeader } from './project'
@@ -10,40 +24,44 @@ import { SearchSection } from './search'
 import { ErrorMessage, ScreenReaderAnnouncements, Toast } from './shared'
 
 const ProjectList = () => {
-  // State for projects and pagination
-  const [projects, setProjects] = useState<(Project | ProjectListItem)[]>([])
-  const [totalPages, setTotalPages] = useState(1)
-  const [totalProjects, setTotalProjects] = useState(0)
-  const [currentPage, setCurrentPage] = useState(1)
+  // Zustand store selectors
+  const projects = useProjects()
+  const { totalPages, totalProjects, currentPage } = usePagination()
+  const { loading, error } = useLoadingState()
+  const { search, statusFilter } = useSearchState()
+  const modals = useModalState()
+  const actions = useActionState()
+  const statuses = useStatuses()
 
-  // Loading and error states
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [statuses, setStatuses] = useState<string[]>([])
-
-  const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
-
-  const [editModal, setEditModal] = useState<{
-    open: boolean
-    project: Project | null
-  }>({ open: false, project: null })
-  const [modalOpen, setModalOpen] = useState(false)
-  const [deleteModal, setDeleteModal] = useState<{
-    open: boolean
-    id: number | null
-    name: string
-  }>({ open: false, id: null, name: '' })
-
-  const [creatingProject, setCreatingProject] = useState(false)
-  const [updatingProject, setUpdatingProject] = useState(false)
-  const [deletingProject, setDeletingProject] = useState(false)
-  const [updatingStatus, setUpdatingStatus] = useState<number | null>(null)
+  // Zustand store actions
+  const { setProjects, setCurrentPage, updateProject: updateProjectInStore } = useProjectActions()
+  const { setLoading, setError, setStatuses } = useLoadingActions()
+  const { setSearch, setStatusFilter } = useSearchActions()
+  const {
+    openCreateModal,
+    closeCreateModal,
+    openEditModal,
+    closeEditModal,
+    openDeleteModal,
+    closeDeleteModal,
+  } = useModalActions()
+  const { setCreatingProject, setUpdatingProject, setDeletingProject, setUpdatingStatus } =
+    useActionStateActions()
 
   const abortControllerRef = useRef<AbortController | null>(null)
   const isInitialLoadRef = useRef(true)
 
   const { toast, showToast, hideToast } = useToast()
+
+  // Create a custom error handler that sets both error and loading state
+  const handleApiError = useCallback(
+    (errorMessage: string) => {
+      setError(errorMessage)
+      setLoading(false)
+    },
+    [setError, setLoading]
+  )
+
   const {
     createProject,
     updateProject,
@@ -52,14 +70,17 @@ const ProjectList = () => {
     getProjects,
     getStatuses,
   } = useProjectApi({
-    onError: setError,
+    onError: handleApiError,
     onSuccess: (type, message) => showToast(type, message),
   })
 
-  const handleSearchChange = useCallback((newSearch: string) => {
-    setSearch(newSearch)
-    setCurrentPage(1)
-  }, [])
+  const handleSearchChange = useCallback(
+    (newSearch: string) => {
+      setSearch(newSearch)
+      setCurrentPage(1)
+    },
+    [setSearch, setCurrentPage]
+  )
 
   const { searchInput, handleSearchInputChange, clearSearch } = useSearch({
     onSearchChange: handleSearchChange,
@@ -73,9 +94,9 @@ const ProjectList = () => {
       if (searchInput) searchInput.focus()
     },
     onCloseModals: () => {
-      if (modalOpen) setModalOpen(false)
-      if (editModal.open) handleEditClose()
-      if (deleteModal.open) setDeleteModal({ open: false, id: null, name: '' })
+      if (modals.create) closeCreateModal()
+      if (modals.edit.open) closeEditModal()
+      if (modals.delete.open) closeDeleteModal()
     },
     disabled: loading,
   })
@@ -119,17 +140,30 @@ const ProjectList = () => {
         abortControllerRef.current.signal
       )
 
-      setProjects(response.projects)
-      setTotalPages(response.pagination.totalPages)
-      setTotalProjects(response.pagination.totalProjects)
+      setProjects(
+        response.projects,
+        response.pagination.totalPages,
+        response.pagination.totalProjects
+      )
+      // Only set loading to false on successful completion
+      setLoading(false)
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
         return
       }
-    } finally {
-      setLoading(false)
+      // Error will be handled by useProjectApi's onError callback (handleApiError)
+      // which will set both error and loading state
     }
-  }, [search, statusFilter, currentPage, cleanupAbortController, getProjects])
+  }, [
+    search,
+    statusFilter,
+    currentPage,
+    cleanupAbortController,
+    getProjects,
+    setProjects,
+    setLoading,
+    setError,
+  ])
 
   useEffect(() => {
     const initialLoad = async () => {
@@ -146,38 +180,38 @@ const ProjectList = () => {
     }
   }, [search, statusFilter, currentPage, loadProjects])
 
-  const handleEdit = useCallback(async (project: ProjectListItem | Project) => {
-    try {
-      setEditModal({ open: true, project: { ...project } })
-    } catch {
-      showToast('error', 'Error setting edit modal')
-    }
-  }, [])
+  const handleEdit = useCallback(
+    async (project: ProjectListItem | Project) => {
+      try {
+        openEditModal({ ...project })
+      } catch {
+        showToast('error', 'Error setting edit modal')
+      }
+    },
+    [openEditModal]
+  )
 
   const handleEditSave = useCallback(
     async (formData: ProjectFormData) => {
-      if (!editModal.project) return
+      if (!modals.edit.project) return
 
       try {
         setUpdatingProject(true)
-        const updatedProject = await updateProject(editModal.project.id, formData)
+        const updatedProject = await updateProject(modals.edit.project.id, formData)
 
-        setProjects((prev) =>
-          prev.map((proj) => (proj.id === updatedProject.id ? updatedProject : proj))
-        )
-
-        setEditModal({ open: false, project: null })
+        updateProjectInStore(updatedProject)
+        closeEditModal()
       } catch {
         showToast('error', 'Error updating project')
       } finally {
         setUpdatingProject(false)
       }
     },
-    [editModal.project, updateProject]
+    [modals.edit.project, updateProject, updateProjectInStore, setUpdatingProject, closeEditModal]
   )
 
   const handleEditClose = () => {
-    setEditModal({ open: false, project: null })
+    closeEditModal()
   }
 
   const handleStatusChange = useCallback(
@@ -186,16 +220,14 @@ const ProjectList = () => {
         setUpdatingStatus(id)
         const updatedProject = await updateProjectStatus(id, status)
 
-        setProjects((prev) =>
-          prev.map((proj) => (proj.id === updatedProject.id ? updatedProject : proj))
-        )
+        updateProjectInStore(updatedProject)
       } catch {
         showToast('error', 'Error updating project status')
       } finally {
         setUpdatingStatus(null)
       }
     },
-    [updateProjectStatus]
+    [updateProjectStatus, updateProjectInStore, setUpdatingStatus]
   )
 
   const handleCreate = useCallback(
@@ -203,7 +235,7 @@ const ProjectList = () => {
       try {
         setCreatingProject(true)
         await createProject(formData)
-        setModalOpen(false)
+        closeCreateModal()
         await loadProjects()
       } catch {
         showToast('error', 'Error creating project')
@@ -211,20 +243,20 @@ const ProjectList = () => {
         setCreatingProject(false)
       }
     },
-    [createProject, loadProjects]
+    [createProject, loadProjects, setCreatingProject, closeCreateModal]
   )
 
   const handleDelete = useCallback(async () => {
-    if (!deleteModal.id) return
+    if (!modals.delete.id) return
 
     try {
       setDeletingProject(true)
-      await deleteProject(deleteModal.id)
+      await deleteProject(modals.delete.id)
 
       // Close all modals
-      setModalOpen(false)
-      setEditModal({ open: false, project: null })
-      setDeleteModal({ open: false, id: null, name: '' })
+      closeCreateModal()
+      closeEditModal()
+      closeDeleteModal()
 
       await loadProjects()
     } catch {
@@ -232,21 +264,35 @@ const ProjectList = () => {
     } finally {
       setDeletingProject(false)
     }
-  }, [deleteModal.id, deleteProject, loadProjects])
+  }, [
+    modals.delete.id,
+    deleteProject,
+    loadProjects,
+    setDeletingProject,
+    closeCreateModal,
+    closeEditModal,
+    closeDeleteModal,
+  ])
 
-  const handlePageChange = useCallback((newPage: number) => {
-    setCurrentPage(newPage)
-  }, [])
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      setCurrentPage(newPage)
+    },
+    [setCurrentPage]
+  )
 
-  const handleStatusFilterChange = useCallback((status: string) => {
-    setStatusFilter(status)
-    setCurrentPage(1)
-  }, [])
+  const handleStatusFilterChange = useCallback(
+    (status: string) => {
+      setStatusFilter(status)
+      setCurrentPage(1)
+    },
+    [setStatusFilter, setCurrentPage]
+  )
 
   const handleRetry = useCallback(() => {
     setError(null)
     loadProjects()
-  }, [loadProjects])
+  }, [setError, loadProjects])
 
   return (
     <div className="mx-auto max-w-2xl rounded-lg bg-white p-4 text-gray-900 shadow md:p-6">
@@ -257,7 +303,7 @@ const ProjectList = () => {
         totalProjects={totalProjects}
       />
 
-      <ProjectListHeader onCreateClick={() => setModalOpen(true)} disabled={loading} />
+      <ProjectListHeader onCreateClick={openCreateModal} disabled={loading} />
 
       {error && <ErrorMessage message={error} onRetry={handleRetry} className="mb-4" />}
 
@@ -281,7 +327,7 @@ const ProjectList = () => {
           statuses={statuses}
           currentPage={currentPage}
           totalPages={totalPages}
-          updatingStatus={updatingStatus}
+          updatingStatus={actions.updatingStatus}
           onEdit={handleEdit}
           onStatusChange={handleStatusChange}
           onPageChange={handlePageChange}
@@ -290,29 +336,25 @@ const ProjectList = () => {
       </ProjectListErrorBoundary>
 
       <ProjectModals
-        createModalOpen={modalOpen}
-        onCreateClose={() => setModalOpen(false)}
+        createModalOpen={modals.create}
+        onCreateClose={closeCreateModal}
         onCreateSubmit={handleCreate}
-        creatingProject={creatingProject}
-        editModalOpen={editModal.open}
-        editProject={editModal.project}
+        creatingProject={actions.creatingProject}
+        editModalOpen={modals.edit.open}
+        editProject={modals.edit.project}
         onEditClose={handleEditClose}
         onEditSubmit={handleEditSave}
         onEditDelete={() => {
-          if (editModal.project) {
-            setDeleteModal({
-              open: true,
-              id: editModal.project.id,
-              name: editModal.project.name,
-            })
+          if (modals.edit.project) {
+            openDeleteModal(modals.edit.project.id, modals.edit.project.name)
           }
         }}
-        updatingProject={updatingProject}
-        deleteModalOpen={deleteModal.open}
-        deleteProjectName={deleteModal.name}
-        onDeleteClose={() => setDeleteModal({ open: false, id: null, name: '' })}
+        updatingProject={actions.updatingProject}
+        deleteModalOpen={modals.delete.open}
+        deleteProjectName={modals.delete.name}
+        onDeleteClose={closeDeleteModal}
         onDeleteConfirm={handleDelete}
-        deletingProject={deletingProject}
+        deletingProject={actions.deletingProject}
         statuses={statuses}
       />
 

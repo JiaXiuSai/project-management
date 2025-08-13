@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import { TOAST_DURATION } from '../../constants'
 import { IconButton } from '../buttons'
 
-export type ToastType = 'success' | 'error'
+export type ToastType = 'success' | 'error' | 'warning' | 'info'
 
 interface ToastProps {
   type: ToastType

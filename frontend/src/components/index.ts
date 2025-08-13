@@ -19,3 +19,6 @@ export * from './shared'
 
 // Hooks
 export * from '../hooks'
+
+// Store
+export * from '../store'

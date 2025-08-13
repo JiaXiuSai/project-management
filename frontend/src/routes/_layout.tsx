@@ -1,7 +1,9 @@
-import { Banner, ProjectList } from './components'
-import { AppErrorBoundary } from './components/AppErrorBoundary'
+import { Outlet } from 'react-router-dom'
 
-const App = () => {
+import { Banner } from '../components'
+import { AppErrorBoundary } from '../components/AppErrorBoundary'
+
+export default function Layout() {
   return (
     <AppErrorBoundary>
       <a
@@ -11,11 +13,7 @@ const App = () => {
         Skip to main content
       </a>
       <Banner />
-      <main id="main-content">
-        <ProjectList />
-      </main>
+      <Outlet />
     </AppErrorBoundary>
   )
 }
-
-export default App

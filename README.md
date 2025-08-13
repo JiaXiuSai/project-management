@@ -103,42 +103,6 @@ The backend includes an artificial delay feature for testing loading states and 
 - **Prettier** - Code formatting
 - **Nodemon** - Development server with auto-restart
 
-## Architecture
-
-### Frontend Architecture
-
-```
-src/
-├── components/          # React components
-│   ├── buttons/        # Reusable button components (Action, Create, Delete, Save, etc.)
-│   ├── modals/         # Modal dialogs (Create, Edit, Delete project modals)
-│   ├── project/        # Project-specific components (ProjectCard, ProjectList, etc.)
-│   ├── search/         # Search functionality (SearchBar, SearchResults, etc.)
-│   └── shared/         # Shared UI components (Modal, Button, LoadingSpinner, etc.)
-├── hooks/              # Custom React hooks
-│   ├── useAppState.ts  # Centralized state management
-│   ├── useProjectApi.ts # API integration with error handling
-│   ├── useSearch.ts    # Search functionality with debouncing
-│   ├── useToast.ts     # Toast notification system
-│   └── ...            # Other custom hooks
-├── services/           # API services and data fetching
-├── utils/              # Utility functions and validation schemas
-└── constants/          # Application constants and configuration
-```
-
-### Backend Architecture
-
-```
-src/
-├── config/             # Configuration management
-├── controllers/        # Request handlers
-├── middleware/         # Express middleware
-├── models/            # Data models
-├── routes/            # API routes
-├── services/          # Business logic
-└── utils/             # Utility functions
-```
-
 ## API Endpoints
 
 ### Health & Info
