@@ -48,9 +48,11 @@ const CreateProjectModal = React.memo(
               error={getFieldError(errors, 'name')}
               required
               className="md:flex-2 w-full p-1"
+              htmlFor="project-name"
             >
               <input
                 {...register('name')}
+                id="project-name"
                 className={`focus:ring-primary focus:border-primary h-[32px] w-full rounded border px-2 py-1 text-gray-900 transition-colors focus:outline-none focus:ring-2 ${
                   getFieldError(errors, 'name') ? 'border-coral' : ''
                 }`}
@@ -59,11 +61,6 @@ const CreateProjectModal = React.memo(
                 aria-describedby={getFieldError(errors, 'name') ? 'name-error' : undefined}
                 aria-invalid={!!getFieldError(errors, 'name')}
               />
-              {getFieldError(errors, 'name') && (
-                <div id="name-error" className="sr-only" role="alert">
-                  {getFieldError(errors, 'name')}
-                </div>
-              )}
             </MemoizedFormField>
 
             <MemoizedFormField
@@ -71,9 +68,11 @@ const CreateProjectModal = React.memo(
               error={getFieldError(errors, 'status')}
               required
               className="w-full p-1 md:flex-1"
+              htmlFor="project-status"
             >
               <select
                 {...register('status')}
+                id="project-status"
                 className={`focus:ring-primary focus:border-primary h-[32px] w-full rounded border px-2 py-1 font-semibold transition-colors focus:outline-none focus:ring-2 ${
                   getFieldError(errors, 'status') ? 'border-coral' : ''
                 }`}
@@ -83,17 +82,13 @@ const CreateProjectModal = React.memo(
               >
                 {statusOptions}
               </select>
-              {getFieldError(errors, 'status') && (
-                <div id="status-error" className="sr-only" role="alert">
-                  {getFieldError(errors, 'status')}
-                </div>
-              )}
             </MemoizedFormField>
           </div>
 
-          <MemoizedFormField label="Description" className="p-1">
+          <MemoizedFormField label="Description" className="p-1" htmlFor="project-description">
             <textarea
               {...register('description')}
+              id="project-description"
               className="focus:ring-primary focus:border-primary min-h-[100px] resize-y rounded border px-2 py-2 text-gray-900 transition-colors focus:outline-none focus:ring-2"
               rows={5}
               placeholder="Enter project description"
@@ -104,6 +99,7 @@ const CreateProjectModal = React.memo(
           <CreateButton
             disabled={!isSubmitting && Object.keys(errors).length > 0}
             loading={loading || isSubmitting}
+            data-testid="create-project-button"
           />
         </form>
       </Modal>

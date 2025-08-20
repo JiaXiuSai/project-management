@@ -25,7 +25,10 @@ const ProjectCard = React.memo(
     const isUpdating = isUpdatingStatus && updatingStatusId === project.id
 
     return (
-      <div className="flex flex-col gap-4 rounded-lg border bg-gray-50 p-4 shadow-sm transition-shadow hover:shadow-md sm:flex-row sm:items-center sm:justify-between">
+      <div
+        className="flex flex-col gap-4 rounded-lg border bg-gray-50 p-4 shadow-sm transition-shadow hover:shadow-md sm:flex-row sm:items-center sm:justify-between"
+        data-testid="project-card"
+      >
         <div className="flex flex-1 flex-col gap-1">
           <button
             className="text-primary hover:text-primary-hover w-fit cursor-pointer border-none bg-transparent p-0 text-left text-lg font-bold transition-colors"

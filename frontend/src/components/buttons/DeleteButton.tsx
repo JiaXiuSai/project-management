@@ -2,7 +2,7 @@ import { Trash2 } from 'lucide-react'
 
 import Button from '../shared/Button'
 
-interface DeleteButtonProps {
+interface DeleteButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   disabled?: boolean
   loading?: boolean
   onClick?: () => void
@@ -18,6 +18,7 @@ const DeleteButton = ({
   children = 'Delete',
   loadingText = 'Deleting...',
   variant = 'coral',
+  ...props
 }: DeleteButtonProps) => {
   return (
     <Button
@@ -28,6 +29,7 @@ const DeleteButton = ({
       disabled={disabled}
       onClick={onClick}
       type="button"
+      {...props}
     >
       {children}
     </Button>

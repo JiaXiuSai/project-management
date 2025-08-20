@@ -26,7 +26,11 @@ const DeleteProjectModal = ({
           <CancelButton onClick={onClose} disabled={loading} />
         </div>
         <div className="flex justify-end">
-          <DeleteButton onClick={onDelete} loading={loading} />
+          <DeleteButton
+            onClick={onDelete}
+            loading={loading}
+            data-testid="delete-project-modal-button"
+          />
         </div>
       </div>
     </div>

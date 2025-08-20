@@ -8,6 +8,7 @@ interface MemoizedFormFieldProps {
   required?: boolean
   className?: string
   description?: string
+  htmlFor?: string
 }
 
 const MemoizedFormField = React.memo(
@@ -18,9 +19,10 @@ const MemoizedFormField = React.memo(
     required = false,
     className = '',
     description,
+    htmlFor,
   }: MemoizedFormFieldProps) => {
     return (
-      <label className={`flex flex-col gap-1 ${className}`}>
+      <label className={`flex flex-col gap-1 ${className}`} htmlFor={htmlFor}>
         <span className="font-medium">
           {label}
           {required && (

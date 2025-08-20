@@ -69,6 +69,7 @@ const Modal = ({ isOpen, onClose, title, children, size = 'sm' }: ModalProps) =>
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? 'modal-title' : undefined}
+      data-testid="modal-backdrop"
     >
       <div
         ref={modalRef}
